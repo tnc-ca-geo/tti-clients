@@ -31,14 +31,13 @@ class TestTBS12SCV50Parser(PayloadTestCase):
 
 
 class TestTBS12SCV50CSVWriter(PayloadTestCase):
-    # This tests a somewhat convoluted setup and is here to
-    # ensure prior behavior.
-    # TODO: replace with tests more focussed on actual units
+
     def test_parse(self):
         writer = tti_sci_chi.TBS12S_CV50_CSV_Writer()
         msg = SimpleNamespace(payload=self.example_message.payload)
-        self.assertEqual(writer.serialize(msg), (
-            '2021-01-04T23:46:05.124510287Z,2000-01-01 02:30:00,'
+        res = writer.serialize(msg)
+        expected = ('2021-01-04T23:46:05.124510287Z,2000-01-01 02:30:00,'
             'sci-chi-climate,tbs-12s-aa0120,PS,0,0,18,78.0,0.0,0.0,'
             '0.0,0.62,321.5,1.95,13.8,1.27,101.89,0.807,13.7,3.0,2.9,'
-            '0.0,0.49,-0.39,1.95,,-51,,10,3,laird-rg191-296af5'))
+            '0.0,0.49,-0.39,1.95,,-51,,10,3,laird-rg191-296af5\n')
+        self.assertEqual(res, expected)

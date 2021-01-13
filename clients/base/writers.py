@@ -3,7 +3,9 @@
 Base classes to write data.
 """
 # standard library
+from datetime import datetime
 import os
+import shutil
 # project
 from clients.base import parsers
 
@@ -15,6 +17,7 @@ class BaseCSVWriter():
     header = []
     template = ''
     parser_class = parsers.BaseParser
+    max_lines = -1
 
     def add_to_csv(self, msg):
         """
@@ -33,6 +36,8 @@ class BaseCSVWriter():
         # reason file generation is in the storage process
         path = self.get_path()
         print(path)
+        if self.max_lines > 0:
+            self.check_lines()
         if not os.path.isfile(path):
             self.create_csv(path, self.header)
         print('Add line to', path)
@@ -82,3 +87,43 @@ class BaseCSVWriter():
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as filehandle:
             filehandle.write(','.join(header) + '\n')
+
+    def get_rotation_path(self):
+        """
+        This secures that data does not get overriden when backed up on the
+        same day. Will probably be used very rarely but it supports quick
+        testing.
+
+        Returns:
+            str
+        """
+        # somewhat ugly: TODO: clean-up
+        path = self.get_path()
+        part, ext = os.path.splitext(path)
+        date = datetime.strftime(datetime.utcnow(), '%Y_%m_%d')
+        new_name = '{}_{}_0{}'.format(part, date, ext)
+        counter = 0
+        while os.path.isfile(new_name):
+            counter += 1
+            part, ext = os.path.splitext(new_name)
+            new_name = '{}_{}{}'.format(part[:-2], counter, ext)
+        return new_name
+
+    def count_lines(self):
+        """
+        Count lines for limiting file_size
+
+        Returns int
+        """
+        return sum(1 for line in open(self.get_path())) - 1
+
+    def check_lines(self):
+        """
+        Check and move file if self.max_lines is reached
+
+        Returns:
+            None
+        """
+        path = self.get_path()
+        if os.path.isfile(path) and self.max_lines < self.count_lines():
+            shutil.move(self.get_path(), self.get_rotation_path())

@@ -130,3 +130,4 @@ dmypy.json
 
 # etc
 set_local_vars.sh
+*neomake*

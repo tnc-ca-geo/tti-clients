@@ -57,6 +57,8 @@ class TBS12S_CV50_CSV_Writer(writers.BaseCSVWriter):
     header = CSV_HEADER
     template = OUTPUT_TEMPLATE
     parser_class = TBS12S_CV50_Parser
+    # limit so that it can be opend in MS Excel
+    max_lines = 60000
 
 
 class TBS12S_CV50_Client(mqtt.BaseMQTTClient):
