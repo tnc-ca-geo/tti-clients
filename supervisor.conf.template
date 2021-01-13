@@ -1,0 +1,17 @@
+# complete and rename
+[program:tti_sci_chi]
+
+user=devuser
+directory=/home/devuser/workspace/tti-clients/tti-clients
+command=/home/devuser/workspace/tti-clients/env/bin/python -m clients.tti_sci_chi
+
+autostart=true
+autorestart=true
+redirect_stderr=false
+
+stdout_logfile=/var/log/supervisor/tti_sci_chi_stdout.log
+stdout_logfile_maxbytes=5MB
+stderr_logfile=/var/log/supervisor/tti_sci_chi_stderr.log
+stderr_logfile_maxbytes=5MB
+
+environment=DATA_FILE=/home/devuser/lora_data/tti_sci_chi.csv,MQTT_PW=
