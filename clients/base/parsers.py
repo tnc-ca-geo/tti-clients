@@ -1,4 +1,11 @@
-#standard library
+# pylint:disable=R0201,W0613
+"""
+Base classes to parse LoRaWAN data
+
+The TBS12S device did get a base class because of common
+use at TNC
+"""
+# standard library
 import base64
 from datetime import datetime
 import json
@@ -12,19 +19,47 @@ TBS12S_MESSAGE_PATTERN = re.compile(
 
 class BaseParser():
     """
-    A base class parsing MQTT messages from TTI. Subclass and
-    re-implement .get_device_data and .get_sensor_data to customize
-    for a particular device/sensor setup.
+    A base class parsing MQTT messages from TTI. Subclass and re-implement
+    .get_device_data and .get_sensor_data to customize for a particular
+    device/sensor setup.
     """
 
     def bytes_to_dict(self, byte_string):
+        """
+        Convert a byte payload to a dictionary
+
+        Args:
+            byte_string(bytes): A byte string containing utf-8 encode JSON
+        Returns:
+            dict
+        """
         return json.loads(byte_string.decode('utf-8'))
 
     def get_payload(self, dic):
+        """
+        Extract and decode LoRaWAN payload field.
+
+        Args:
+            dic(dict): A dictionary containing LoRaWAN data
+        Returns:
+            bytes
+        """
         return base64.b64decode(
             dic.get('uplink_message', {}).get('frm_payload', b''))
 
     def parse(self, msg):
+        """
+        Parse the message in three steps:
+
+        1. LoRaWAN payload which wrapes
+        2. Device payload which contains
+        3. Sensor data
+
+        Args:
+            msg(paho.mqtt message object): The message
+        Returns:
+            dict
+        """
         ret = {}
         dic = self.bytes_to_dict(msg.payload)
         ret.update(self.get_lorawan_metadata(dic))
@@ -35,11 +70,19 @@ class BaseParser():
         return ret
 
     def get_lorawan_metadata(self, dic):
+        """
+        Parse out the metadata from LoRaWAN network server
+
+        Args:
+            dic(dict): Message in dict format
+        Returns:
+            dict
+        """
         uplink_message = dic.get('uplink_message', {})
         rx_metadata = uplink_message.get('rx_metadata')
         ret = {}
         for item in rx_metadata:
-            rssi = item.get('rssi', -999) 
+            rssi = item.get('rssi', -999)
             if rssi > ret.get('rssi', -999):
                 ret['rssi'] = rssi
                 ret['snr'] = item.get('snr')
@@ -54,32 +97,66 @@ class BaseParser():
         return ret
 
     def get_device_data(self, byte_string):
+        """
+        Parse device data (placeholder)
+
+        Args:
+            byte_string(bytes): The decoded message.
+        Returns:
+            dict
+        """
         return {'device': byte_string}
 
     def sensor_condition(self, dic):
+        """
+        A condition under which sensor data will be processed
+
+        Args:
+            dic(dict): Data dictionary.
+        Returns:
+            boolean
+        """
         return True
 
     def get_sensor_data(self, dic):
+        """
+        Parse out sensor data
+
+        Args:
+            dic(dict)
+        Returns:
+            dic
+        """
         return {}
 
 
 class TBS12SParser(BaseParser):
+    """
+    A parser for TBS12S devices
+    """
 
     def get_device_data(self, byte_string):
+        """
+        Parse out TBS12S data
+
+        Args:
+            byte_string(bytes)
+        Returns:
+            dict
+        """
         res = TBS12S_MESSAGE_PATTERN.match(byte_string.decode('utf-8'))
         if not res:
             return {}
         ret = {
             'prefix': res['prefix'],
             'device_time': datetime.strftime(
-                datetime.strptime(res['time'], 
+                datetime.strptime(res['time'],
             '%y:%m:%d:%H:%M:%S'), '%Y-%m-%d %H:%M:%S'),
             'measurements': res['measurements']}
         if ret.get('prefix') == 'PS':
             ret['sensor_id'] = res['data'][0]
             ret['sub_sensor_id'] = res['data'][1]
             ret['nb_values'] = int(res['data'][2:4])
-            # ret.update(sensor_function(res['measurements']))
         if ret.get('prefix') == 'C':
             ret['board_id'] = res['data'][0:8]
             ret['fw_version'] = res['data'][8:16]
@@ -92,4 +169,12 @@ class TBS12SParser(BaseParser):
         return ret
 
     def sensor_condition(self, dic):
+        """
+        Process sensor data when prefix field equals 'PS'
+
+        Args:
+            dic(dict)
+        Returns:
+            dict
+        """
         return dic.get('prefix') == 'PS'
