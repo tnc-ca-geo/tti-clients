@@ -19,6 +19,9 @@ class BaseCSVWriter():
     parser_class = parsers.BaseParser
     max_lines = -1
 
+    def __init__(self):
+        print('Write to', self.get_path())
+
     def add_to_csv(self, msg):
         """
         Adds a message as line to a CSV file. Provide self.parser_class to

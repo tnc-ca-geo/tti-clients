@@ -55,7 +55,7 @@ class TBS12S_CV50_CSV_Writer(writers.BaseCSVWriter):
     A CSV writer for the TBS12S/CV50 setup
     """
     header = CSV_HEADER
-    template = OUTPUT_TEMPLATE
+    template = os.environ.get('DATA_FILE') or OUTPUT_TEMPLATE
     parser_class = TBS12S_CV50_Parser
     # limit so that it can be opend in MS Excel
     max_lines = 60000
