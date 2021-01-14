@@ -81,7 +81,7 @@ class BaseParser():
         uplink_message = dic.get('uplink_message', {})
         rx_metadata = uplink_message.get('rx_metadata')
         ret = {}
-        for item in rx_metadata:
+        for item in rx_metadata or []:
             rssi = item.get('rssi', -999)
             if rssi > ret.get('rssi', -999):
                 ret['rssi'] = rssi
