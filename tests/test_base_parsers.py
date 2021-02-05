@@ -2,6 +2,8 @@
 """
 Test base parsers
 """
+# standard library
+from unittest import TestCase
 # project
 from clients.base import parsers
 # tests
@@ -61,3 +63,31 @@ class TestTBS12SParser(PayloadTestCase):
             'prefix': 'PB', 'device_time': '2000-01-01 02:30:00', 'measurements': '2.66',
             'battery_voltage': 2.66})
         self.assertEqual(parser.get_device_data(b''), {})
+
+
+class TestTektelicParser(TestCase):
+
+    def test_convert_bytestring_to_hexrepresentation(self):
+        parser = parsers.TektelicTrackerParser()
+        self.assertEqual(
+            parser.convert_bytestring_to_hexrepresentation(b'abc'), '61 62 63')
+        self.assertEqual(
+            parser.convert_bytestring_to_hexrepresentation(b'x11x12x13'),
+            '10 11 12')
+
+    def test_parse_device_message(self):
+        test_message = ''
+
+
+class TestFeatherTrackerParser(TestCase):
+
+    def test_get_device_data(self):
+        payload = b'-122.27557, 37.84182,2021-02-05 21:03:20\x00\x00'
+        parser = parsers.FeatherTrackerParser()
+        res = parser.get_device_data(payload)
+        print(res)
+
+    def test_invalid_format(self):
+        payload = b''
+        parser = parsers.FeatherTrackerParser()
+        res = parser.get_device_data(payload)

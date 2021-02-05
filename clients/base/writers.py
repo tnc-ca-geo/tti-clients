@@ -7,7 +7,44 @@ from datetime import datetime
 import os
 import shutil
 # project
-from clients.base import parsers
+from clients.base import parsers, ago
+
+
+class BaseAGOWriter():
+    parser_class = parsers.BaseParser
+    url = 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/'
+    feature_service = url + 'lora_tracking_1/FeatureServer/'
+
+    def add_to_ago(self, msg):
+        feature_service = ago.FeatureService(self.feature_service)
+        record = self.serialize(msg)
+        feature_service.post_records([record])
+
+    def serialize(self, msg):
+        """
+        Serialize message in two steps:
+        1. transform into a dictionary using the parser class
+        2. transform dictionary into a body that can be posted to AGO
+
+        Args:
+            msg(dict): A message from mqtt
+        Returns:
+            str: body that can be processed by AGO
+        """
+        parsed = self.parser_class().parse(msg)
+        # some remapping to be compatible wih older layer
+        parsed['received_t'] = parsed.pop('received_at')[0:20].replace('T', ' ')
+        # this remapping is pretty pointless, maybe we could adjust the feature
+        # layer
+        parsed['app'] = parsed.pop('app_id')
+        parsed['dev'] = parsed.pop('dev_id')
+        parsed['gateway'] = parsed.pop('gw_id')
+        return {
+            'geometry': {
+                'x': parsed.pop('lon'),
+                'y': parsed.pop('lat'),
+                'spatialReference': {'wkid': 4326}},
+            'attributes': parsed}
 
 
 class BaseCSVWriter():

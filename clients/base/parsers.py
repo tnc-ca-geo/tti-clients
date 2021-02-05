@@ -178,3 +178,48 @@ class TBS12SParser(BaseParser):
             dict
         """
         return dic.get('prefix') == 'PS'
+
+
+class TektelicTrackerParser(BaseParser):
+
+    def convert_bytestring_to_hexrepresentation(self, bytes_string):
+        """
+        This might be helpful for debugging (unused for the actual parsing)
+        """
+        ret = ''
+        for item in list(bytes_string):
+            hx = hex(item)[2:]
+            ret += (hx if len(hx) == 2 else "0" + hx) + ' '
+        return ret[:-1]
+
+    def get_device_data(self, byte_string):
+        return {'device': self.convert_bytestring_to_hexrepresentation(
+            byte_string)}
+
+
+class FeatherTrackerParser(BaseParser):
+
+    def get_device_data(self, byte_string):
+        parser_error = False
+        valid_fix = True
+        lon, lat, time = None, None, None
+        try:
+            # We need to remove these 00 bytes since they mark the end of
+            # byte_string in the Arduino code. Of course we should fix it
+            # there eventually
+            lon, lat, time = byte_string.strip(
+                b'\x00').decode('utf-8').split(',')
+            lon = float(lon)
+            lat = float(lat)
+            # just check whether conversion would work but we do need to posted
+            # text to ago
+            datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            parser_error = False
+            valid_fix = True
+        return {
+            'time': time,
+            'lon': lon,
+            'lat': lat,
+            'valid_fix': valid_fix,
+            'parse_error': parser_error}
