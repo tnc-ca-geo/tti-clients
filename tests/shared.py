@@ -13,13 +13,14 @@ TEST_DIRECTORY = os.path.join(os.path.dirname(__file__), 'test_directory')
 
 
 class PayloadTestCase(TestCase):
+    example_payload = 'tti_sci_chi_example_payload.txt'
 
     def setUp(self):
         """
         Load exampe payload from a file
         """
         example_filename = os.path.join(
-            os.path.dirname(__file__), 'tti_sci_chi_example_payload.txt')
+            os.path.dirname(__file__), self.example_payload)
         with open(example_filename, 'rb') as file_handle:
             example_payload = file_handle.read()
         self.example_message = SimpleNamespace(payload=example_payload)

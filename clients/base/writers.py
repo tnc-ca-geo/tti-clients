@@ -39,12 +39,14 @@ class BaseAGOWriter():
         parsed['app'] = parsed.pop('app_id')
         parsed['dev'] = parsed.pop('dev_id')
         parsed['gateway'] = parsed.pop('gw_id')
-        return {
+        ret =  {
             'geometry': {
                 'x': parsed.pop('lon'),
                 'y': parsed.pop('lat'),
                 'spatialReference': {'wkid': 4326}},
             'attributes': parsed}
+        print(ret)
+        return ret
 
 
 class BaseCSVWriter():

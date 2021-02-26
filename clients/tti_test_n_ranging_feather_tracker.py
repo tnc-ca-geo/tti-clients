@@ -1,5 +1,5 @@
 """
-A client sending data from feather tracker to AGO
+A client sending data from trackers to AGO
 """
 from clients.base import mqtt, parsers, writers
 
@@ -14,6 +14,6 @@ class TrackerClient(mqtt.BaseMQTTClient):
     username = 'test-n-ranging@tnc'
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     writer = TrackerAGOWriter()
     TrackerClient(callback=writer.add_to_ago).run()

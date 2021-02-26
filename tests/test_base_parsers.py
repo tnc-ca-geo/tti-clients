@@ -79,15 +79,27 @@ class TestTektelicParser(TestCase):
         test_message = ''
 
 
-class TestFeatherTrackerParser(TestCase):
+class TestFeatherTrackerParser(PayloadTestCase):
+    example_payload = 'oyster_example_payload.txt'
 
-    def test_get_device_data(self):
-        payload = b'-122.27557, 37.84182,2021-02-05 21:03:20\x00\x00'
+    def test_oyster(self):
         parser = parsers.FeatherTrackerParser()
-        res = parser.get_device_data(payload)
+        ret = parser.parse(self.example_message)
+        print('DEBUG 3', ret)
+
+    def test_get_time(self):
+        time = '2021-02-25T23:33:39.307001320Z'
+        parser = parsers.FeatherTrackerParser()
+        res = parser.get_time(time)
         print(res)
 
-    def test_invalid_format(self):
-        payload = b''
-        parser = parsers.FeatherTrackerParser()
-        res = parser.get_device_data(payload)
+    #def test_get_device_data(self):
+    #    payload = b'-122.27557, 37.84182,2021-02-05 21:03:20\x00\x00'
+    #    parser = parsers.FeatherTrackerParser()
+    #    res = parser.get_device_data(payload)
+    #    print(res)
+
+    #def test_invalid_format(self):
+    #    payload = b''
+    #    parser = parsers.FeatherTrackerParser()
+    #    res = parser.get_device_data(payload)

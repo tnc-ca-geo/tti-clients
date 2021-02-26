@@ -9,6 +9,7 @@ use at TNC
 import base64
 from datetime import datetime
 import json
+import pytz
 import re
 
 
@@ -199,27 +200,31 @@ class TektelicTrackerParser(BaseParser):
 
 class FeatherTrackerParser(BaseParser):
 
-    def get_device_data(self, byte_string):
-        parser_error = False
-        valid_fix = True
-        lon, lat, time = None, None, None
+    def get_time(self, received):
+        utc = pytz.timezone('UTC')
+        pst = pytz.timezone('America/Los_Angeles')
         try:
-            # We need to remove these 00 bytes since they mark the end of
-            # byte_string in the Arduino code. Of course we should fix it
-            # there eventually
-            lon, lat, time = byte_string.strip(
-                b'\x00').decode('utf-8').split(',')
-            lon = float(lon)
-            lat = float(lat)
-            # just check whether conversion would work but we do need to posted
-            # text to ago
-            datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            parser_error = False
-            valid_fix = True
-        return {
-            'time': time,
-            'lon': lon,
-            'lat': lat,
-            'valid_fix': valid_fix,
-            'parse_error': parser_error}
+            received = received.split('.')[0]
+            rec_time = datetime.strptime(received, '%Y-%m-%dT%H:%M:%S')
+            rec_time = utc.localize(rec_time)
+            return rec_time.astimezone(pst).strftime('%Y-%m-%d %H:%M:%S')
+        except (AttributeError, ValueError):
+            return None
+
+    def parse(self, msg):
+        """
+        Since we have very different devices in this application, we rely
+        on payload formatters.
+        """
+        dic = self.bytes_to_dict(msg.payload)
+        payload = dic.get('uplink_message', {}).get('decoded_payload', {})
+        ret = self.get_lorawan_metadata(dic)
+        ret.update({
+            'time': self.get_time(payload.get('time')) or self.get_time(
+                dic.get('received_at')),
+            'lon': payload.get('longitudeDeg', 0),
+            'lat': payload.get('latitudeDeg', 0),
+            'valid_fix': not payload.get(payload.get('fixFailed'))})
+        if ret['lon'] == 1000 or ret['lat'] == 1000:
+            ret['valid_fix'] = False
+        return ret
