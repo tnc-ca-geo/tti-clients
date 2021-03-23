@@ -1,4 +1,4 @@
-# pylint:disable=C0103,W0613
+# pylint:disable=C0103,W0613,E0401
 """
 A base client for TTI interaction via MQTT (subscribe)
 """
@@ -55,6 +55,7 @@ class BaseMQTTClient():
         client = mqtt.Client()
         client.on_connect = self.on_connect
         client.on_message = self.on_message
+        client.on_disconnect = self.on_disconnect
         client.username_pw_set(self.username, password=password)
         client.connect(self.host, 1883, 60)
         client.subscribe(self.topic)
@@ -86,3 +87,7 @@ class BaseMQTTClient():
         """
         print('MQTT response code: {}, {}'.format(rc, MQTT_RCS[rc]))
         self.connect_callback()
+
+    def on_disconnect(self, client, data, rc):
+        print('Connection lost, MQTT response code: {}, {}'.format(
+            rc, MQTT_RCS[rc]))
