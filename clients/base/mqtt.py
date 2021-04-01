@@ -91,4 +91,10 @@ class BaseMQTTClient():
     def on_disconnect(self, client, data, rc):
         print('Connection lost, MQTT response code: {}, {}'.format(
             rc, MQTT_RCS[rc]))
-        client.connect(self.host, 1883, 60)
+        while True:
+            try:
+                client.reinitialise(self.host, 1883, 60)
+                break
+            except (ValueError, OSError) as e:
+                print(e)
+                print('Trying to reconnect')

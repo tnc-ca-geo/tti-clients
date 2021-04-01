@@ -28,14 +28,15 @@ class BaseAGOWriter():
 
     def serialize(self, msg):
         """
-        Serialize message in two steps:
-        1. transform into a dictionary using the parser class
-        2. transform dictionary into a HTTP body to be posted to AGO
+        Serialize the message in two steps:
+
+        1. transform into a dictionary using parser class
+        2. transform dictionary into HTTP body to be posted to AGO API
 
         Args:
-            msg(dict): A message from mqtt
+            msg(dict): MQTT message
         Returns:
-            str: HTTP body that can be processed by AGO API
+            str: HTTP body confirming with AGO API
         """
         parsed = self.parser_class().parse(msg)
         # some remapping to be compatible wih older layer
