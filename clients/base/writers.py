@@ -11,11 +11,17 @@ from clients.base import parsers, ago
 
 
 class BaseAGOWriter():
+    """
+    Write data to ESRI ArcGIS online.
+    """
     parser_class = parsers.BaseParser
     url = 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/'
     feature_service = url + 'lora_tracking_1/FeatureServer/'
 
     def add_to_ago(self, msg):
+        """
+        Add a feature to AGO derrived from msg.
+        """
         feature_service = ago.FeatureService(self.feature_service)
         record = self.serialize(msg)
         feature_service.post_records([record])
@@ -24,16 +30,16 @@ class BaseAGOWriter():
         """
         Serialize message in two steps:
         1. transform into a dictionary using the parser class
-        2. transform dictionary into a body that can be posted to AGO
+        2. transform dictionary into a HTTP body to be posted to AGO
 
         Args:
             msg(dict): A message from mqtt
         Returns:
-            str: body that can be processed by AGO
+            str: HTTP body that can be processed by AGO API
         """
         parsed = self.parser_class().parse(msg)
         # some remapping to be compatible wih older layer
-        parsed['received_t'] = parsed.pop('received_at')[0:20].replace('T', ' ')
+        parsed['received_t'] = parsed.pop('received_at')[0:19].replace('T', ' ')
         # this remapping is pretty pointless, maybe we could adjust the feature
         # layer
         parsed['app'] = parsed.pop('app_id')
