@@ -57,7 +57,7 @@ class BaseMQTTClient():
         client.on_message = self.on_message
         client.on_disconnect = self.on_disconnect
         client.username_pw_set(self.username, password=password)
-        client.connect(self.host, 1883, 60)
+        client.connect(self.host, 1883, 10)
         client.subscribe(self.topic)
         return client
 
@@ -91,10 +91,3 @@ class BaseMQTTClient():
     def on_disconnect(self, client, data, rc):
         print('Connection lost, MQTT response code: {}, {}'.format(
             rc, MQTT_RCS[rc]))
-        while True:
-            try:
-                client.reinitialise(self.host, 1883, 60)
-                break
-            except (ValueError, OSError) as e:
-                print(e)
-                print('Trying to reconnect')

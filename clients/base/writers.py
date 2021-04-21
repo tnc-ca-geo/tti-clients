@@ -52,7 +52,7 @@ class BaseAGOWriter():
                 'y': parsed.pop('lat'),
                 'spatialReference': {'wkid': 4326}},
             'attributes': parsed}
-        print(ret)
+        # print(ret)
         return ret
 
 
@@ -64,9 +64,25 @@ class BaseCSVWriter():
     template = ''
     parser_class = parsers.BaseParser
     max_lines = -1
+    # set this to True for debugging
+    print_message = False
+    append = True
 
     def __init__(self):
         print('Write to', self.get_path())
+        self.write_mode = 'a' if self.append else 'w'
+
+    def filter(self, dic):
+        """
+        Filter condition
+        """
+        return True
+
+    def additional_transformations(self, dic):
+        """
+        Allow for the creation of derived fields
+        """
+        return dic
 
     def add_to_csv(self, msg):
         """
@@ -76,22 +92,30 @@ class BaseCSVWriter():
 
         Args:
             msg(paho-mqtt.message): A MQTT message (or any message the parser
-                can digetst)
+                can digest)
         Returns:
             None
         """
-        csv_line = self.serialize(msg)
+        if self.print_message:
+            print(msg.payload)
+        dic = self.parser_class().parse(msg)
+        # print(dic)
+        if not self.filter(dic):
+            return
+        dic = self.additional_transformations(dic)
+        csv_line = self.create_csv_line(dic)
         # we need this to enable multiple csv for the same
         # reason file generation is in the storage process
         path = self.get_path()
-        print(path)
         if self.max_lines > 0:
             self.check_lines()
-        if not os.path.isfile(path):
+        if not os.path.isfile(path) or self.write_mode == 'w':
             self.create_csv(path, self.header)
+            self.write_mode = 'a'
         print('Add line to', path)
-        with open(path, 'a') as filehandle:
+        with open(path, self.write_mode) as filehandle:
             filehandle.write(csv_line)
+        return
 
     def create_csv_line(self, dic):
         """
@@ -104,18 +128,6 @@ class BaseCSVWriter():
         """
         return ','.join([
             str(dic.get(field, '')) for field in self.header]) + '\n'
-
-    def serialize(self, msg):
-        """
-        Serializes Message to CSV line
-
-        Args:
-            msg(paho-mqtt.message)
-        Returns:
-            str
-        """
-        dic = self.parser_class().parse(msg)
-        return self.create_csv_line(dic)
 
     def get_path(self):
         """

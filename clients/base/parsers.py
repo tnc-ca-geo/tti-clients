@@ -1,4 +1,4 @@
-# pylint:disable=R0201,W0613
+# pylint:disable=E0401,R0201,W0613
 """
 Base classes to parse LoRaWAN data
 
@@ -9,8 +9,9 @@ use at TNC
 import base64
 from datetime import datetime
 import json
-import pytz
 import re
+# third party
+import pytz
 
 
 TBS12S_MESSAGE_PATTERN = re.compile(
