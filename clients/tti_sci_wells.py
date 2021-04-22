@@ -9,7 +9,7 @@ from clients.base import mqtt, parsers, writers
 
 CV50_PS_MAPPING = ['w_pressure', 'w_temperature', 'w_level']
 CSV_HEADER = (
-    'label', 'received_at', 'app_id', 'dev_id', 'prefix',
+    'label', 'received_utc', 'received_local', 'app_id', 'dev_id', 'prefix',
     'sensor_id', 'sub_sensor_id', 'nb_values', 'w_pressure',
     'w_temperature', 'w_level', 'battery_voltage', 'dev_rssi')
 LABEL_MAPPING = {

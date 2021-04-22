@@ -14,9 +14,27 @@ import re
 import pytz
 
 
+LOCAL_TZ = pytz.timezone('America/Los_Angeles')
+# for now we ignoriering everything after the . that separates fractions seconds
+# because of a bug in Python versions before 3.6
+TIME_PATTERN = '%Y-%m-%dT%H:%M:%S'
 TBS12S_MESSAGE_PATTERN = re.compile(
     r'^(?P<prefix>[A-Z]+)(?P<time>\d{2}:\d{2}:\d{2}:\d{2}:\d{2}:00)'
     r'(?P<data>[RS0-9]*)[ ]*(?P<measurements>.*)$')
+
+
+def get_local_time(timestring, local_tz=LOCAL_TZ, timepattern=TIME_PATTERN):
+    """
+    Convert time to local time
+    """
+    if timestring:
+        # cut off the fractions of a second because of Python bug
+        timestr = timestring.split('.')[0]
+        time = datetime.strptime(timestr, timepattern)
+        time = time.replace(tzinfo=pytz.UTC)
+        time = time.astimezone(local_tz)
+        return time.strftime(timepattern)
+    return ''
 
 
 class BaseParser():
@@ -92,6 +110,9 @@ class BaseParser():
         ret['dr'] = uplink_message.get('settings', {}).get('data_rate_index')
         ret['payload'] = uplink_message.get('frm_payload')
         ret['received_at'] = uplink_message.get('received_at')
+        ret['received_utc'] = ret['received_at']
+        ret['received_local'] = get_local_time(
+             ret['received_at'], local_tz=LOCAL_TZ)
         end_device_ids = dic.get('end_device_ids', {})
         ret['dev_id'] = end_device_ids.get('device_id')
         ret['app_id'] = end_device_ids.get(

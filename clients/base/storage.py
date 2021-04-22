@@ -43,7 +43,7 @@ class StorageReader():
         """
         headers = {'Authorization': 'Bearer {}'.format(self.password)}
         time = self.start
-        while time < datetime.now():
+        while time < datetime.utcnow():
             print('Loading new page')
             after = time.strftime('%Y-%m-%dT%H:%M:%SZ')
             time = time + timedelta(days=1)
