@@ -1,4 +1,4 @@
-# pylint:disable=E0401,R0201,W0613
+    # pylint:disable=E0401,R0201,W0613
 """
 Base classes to parse LoRaWAN data
 
